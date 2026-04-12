@@ -11,7 +11,10 @@ A full-stack market intelligence platform that scrapes public data, analyzes it 
 
 ### 1. GitHub Configuration
 The scraper runs automatically via GitHub Actions.
-- Ensure the GitHub Action has **Read and Write permissions** (Settings > Actions > General > Workflow permissions).
+- **Workflow Permissions**: Ensure the GitHub Action has **Read and Write permissions**. 
+    - Go to **Settings > Actions > General**.
+    - Scroll down to **Workflow permissions**.
+    - Select **"Read and write permissions"** and click **Save**.
 - The scraper runs daily at 00:00 UTC and commits `raw_data.json` back to the repo.
 
 ### 2. Local Development
