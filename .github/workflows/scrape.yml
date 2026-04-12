@@ -1,0 +1,51 @@
+name: Daily Market Intelligence Scrape
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Scraper
+        run: npm run scrape
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Push to HuggingFace
+        run: npx tsx scripts/push_to_hf.ts
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO: ${{ secrets.HF_REPO }}
+
+      - name: Upload Raw Data to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-market-data
+          path: raw_data.json
+
+      # Note: To push to HuggingFace, you would add a step here using their CLI or a python script
+      # Example:
+      # - name: Push to HuggingFace
+      #   run: |
+      #     pip install huggingface_hub
+      #     python scripts/push_to_hf.py
+      #   env:
+      #     HF_TOKEN: ${{ secrets.HF_TOKEN }}
