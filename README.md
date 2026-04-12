@@ -1,20 +1,33 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# TrendPulse AI - Market Intelligence Platform
 
-# Run and deploy your AI Studio app
+A full-stack market intelligence platform that scrapes public data, analyzes it with Gemini AI, and visualizes insights.
 
-This contains everything you need to run your app locally.
+## Features
+- **Daily Scraper**: Uses Playwright to collect data from Reddit and other sources.
+- **AI Processor**: Uses Gemini 1.5 Flash to transform raw data into trends, buying signals, and predictions.
+- **HuggingFace Integration**: Automatically archives raw and processed data to HuggingFace Datasets.
+- **Interactive Dashboard**: Visualizes market trends, audience sentiment, and buying signals.
 
-View your app in AI Studio: https://ai.studio/apps/2eeb3e3b-679e-409b-97f8-8349f31f95a4
+## Setup Instructions
 
-## Run Locally
+### 1. GitHub Secrets
+To enable the daily automation, add the following secrets to your GitHub repository:
+- `GEMINI_API_KEY`: Your Google AI Studio API key.
+- `HF_TOKEN`: Your HuggingFace Write Token.
+- `HF_REPO`: Your HuggingFace dataset repository (e.g., `username/dataset-name`).
 
-**Prerequisites:**  Node.js
+### 2. Local Development
+1. Install dependencies: `npm install`
+2. Run the dev server: `npm run dev`
+3. Run a manual scrape: `npm run scrape`
+4. Process data: `npx tsx scripts/processor.ts`
 
+### 3. Deployment
+The app is ready for deployment to Cloud Run or any static hosting provider. The automation runs independently via GitHub Actions.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Project Structure
+- `scripts/scraper.ts`: Playwright scraping logic.
+- `scripts/processor.ts`: AI data processing logic.
+- `scripts/push_to_hf.ts`: HuggingFace upload logic.
+- `src/App.tsx`: Main dashboard UI.
+- `.github/workflows/scrape.yml`: Automation pipeline.

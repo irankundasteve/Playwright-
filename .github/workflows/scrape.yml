@@ -30,6 +30,11 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
+      - name: Process Data
+        run: npx tsx scripts/processor.ts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
       - name: Push to HuggingFace
         run: npx tsx scripts/push_to_hf.ts
         env:
