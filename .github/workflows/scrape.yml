@@ -30,16 +30,15 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Process Data
-        run: npx tsx scripts/processor.ts
+      - name: Commit and Push Raw Data
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add raw_data.json
+          git commit -m "chore: update raw market data [skip ci]" || echo "No changes to commit"
+          git push
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
-      - name: Push to HuggingFace
-        run: npx tsx scripts/push_to_hf.ts
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO: ${{ secrets.HF_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Raw Data to Artifacts
         uses: actions/upload-artifact@v4

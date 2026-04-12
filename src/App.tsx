@@ -128,9 +128,9 @@ export default function App() {
                 The daily scraper is configured via GitHub Actions. To activate:
               </p>
               <ul className="text-[11px] text-zinc-400 space-y-2 list-disc pl-4">
-                <li>Add <code className="text-zinc-200">HF_TOKEN</code> to GitHub Secrets</li>
-                <li>Add <code className="text-zinc-200">HF_REPO</code> to GitHub Secrets</li>
                 <li>Scraper runs daily at 00:00 UTC</li>
+                <li>Data saved to <code className="text-zinc-200">raw_data.json</code></li>
+                <li>Committed directly to your repo</li>
               </ul>
               <Button variant="outline" className="w-full text-xs border-zinc-800 hover:bg-zinc-900 h-8">
                 View Scraper Code
