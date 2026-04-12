@@ -153,18 +153,18 @@ export default function App() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-500">Last Sync</span>
-                  <span className="text-zinc-400 font-mono">2m ago</span>
+                  <span className="text-zinc-400 font-mono">14s ago</span>
                 </div>
               </div>
               <div className="pt-4">
                 <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: '75%' }}
-                    className="bg-zinc-100 h-full"
+                    animate={{ width: '92%' }}
+                    className="bg-emerald-500 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                   />
                 </div>
-                <p className="text-[10px] font-mono text-zinc-600 mt-2 uppercase tracking-widest">Storage: 225GB / 300GB (HuggingFace)</p>
+                <p className="text-[10px] font-mono text-zinc-600 mt-2 uppercase tracking-widest">Storage: 276.4 GB / 300 GB (HuggingFace)</p>
               </div>
             </div>
           </div>

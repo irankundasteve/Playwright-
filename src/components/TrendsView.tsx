@@ -53,14 +53,18 @@ export const TrendsView: React.FC<TrendsViewProps> = ({ trends }) => {
         </CardHeader>
         <CardContent className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={trends}>
+            <BarChart data={trends.slice(0, 15)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
               <XAxis 
                 dataKey="keyword" 
                 stroke="#71717a" 
-                fontSize={12} 
+                fontSize={10} 
                 tickLine={false} 
                 axisLine={false}
+                interval={0}
+                angle={-45}
+                textAnchor="end"
+                height={60}
               />
               <YAxis 
                 stroke="#71717a" 
