@@ -23,8 +23,7 @@ def get_driver():
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
-def scrape_news(query):
-    driver = get_driver()
+def scrape_news(driver, query):
     print(f"Searching for: {query}...")
     
     all_articles = []
@@ -32,10 +31,10 @@ def scrape_news(query):
         # Try DuckDuckGo first
         search_url = f"https://duckduckgo.com/html/?q={query.replace(' ', '+')}"
         driver.get(search_url)
-        time.sleep(3)
+        time.sleep(1)
         
         links = driver.find_elements(By.CSS_SELECTOR, ".result__a")
-        article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:20]
+        article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:15]
         
         if not article_links:
             print(f"No links found on DuckDuckGo for '{query}'. Page title: {driver.title}")
@@ -44,7 +43,7 @@ def scrape_news(query):
                 print("Falling back to Hacker News...")
                 driver.get("https://news.ycombinator.com/")
                 hn_links = driver.find_elements(By.CSS_SELECTOR, ".titleline > a")
-                article_links = [link.get_attribute("href") for link in hn_links][:30]
+                article_links = [link.get_attribute("href") for link in hn_links][:20]
         
         print(f"Found {len(article_links)} links. Starting crawl...")
         
@@ -52,10 +51,9 @@ def scrape_news(query):
             try:
                 print(f"Crawling: {link}")
                 driver.get(link)
-                time.sleep(3)
+                time.sleep(2)
                 
                 title = driver.title
-                print(f"Page title: {title}")
                 
                 # Heuristic for main content
                 body_text = ""
@@ -82,21 +80,16 @@ def scrape_news(query):
                     all_articles.append({
                         "title": title,
                         "url": link,
-                        "content": body_text[:15000], # Increased limit to 15k chars
+                        "content": body_text[:15000],
                         "timestamp": datetime.now().isoformat(),
                         "query": query
                     })
-                    print(f"Successfully crawled: {title[:50]}...")
-                else:
-                    print(f"Content too short ({len(body_text)} chars) for {link}")
                 
             except Exception as e:
                 print(f"Failed to crawl {link}: {e}")
                 
     except Exception as e:
         print(f"Search failed for {query}: {e}")
-    finally:
-        driver.quit()
         
     return all_articles
 
@@ -116,23 +109,21 @@ def main():
         "quantum computing progress 2024",
         "robotics and automation in industry",
         "web3 and blockchain utility cases",
-        "remote work culture and tools trends",
-        "creator economy growth and platforms",
-        "edtech innovation and future of learning",
-        "proptech trends and real estate tech",
-        "agritech and future of farming news",
-        "biotech and genomic medicine breakthroughs"
+        "remote work culture and tools trends"
     ]
     
     total_data = []
-    print(f"Starting massive news crawl for {len(queries)} search queries to reach >1MB data...")
+    print(f"Starting optimized news crawl for {len(queries)} search queries...")
     
-    for query in queries:
-        data = scrape_news(query)
-        total_data.extend(data)
-        print(f"Current total data items: {len(total_data)}")
-        # Small delay between queries
-        time.sleep(2)
+    driver = get_driver()
+    try:
+        for query in queries:
+            data = scrape_news(driver, query)
+            total_data.extend(data)
+            print(f"Current total data items: {len(total_data)}")
+            time.sleep(1)
+    finally:
+        driver.quit()
         
     output_path = os.path.join(os.getcwd(), "raw_data.json")
     with open(output_path, "w", encoding="utf-8") as f:
