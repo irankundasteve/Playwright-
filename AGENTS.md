@@ -6,12 +6,12 @@ TrendPulse AI is a market intelligence platform that automates the collection an
 ## Technical Stack
 - **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui, Recharts, Motion.
 - **AI**: Gemini 1.5 Flash (via @google/genai).
-- **Scraping**: Playwright (with stealth plugin).
+- **Scraping**: Python 3.10 with Selenium.
 - **Automation**: GitHub Actions (commits data back to repo).
 - **Storage**: GitHub Repository (`raw_data.json`).
 
 ## Key Files
-- `scripts/scraper.ts`: The core scraping engine.
+- `scripts/scraper.py`: The core scraping engine (Python).
 - `.github/workflows/scrape.yml`: The CI/CD pipeline for daily data collection.
 
 ## Configuration Requirements

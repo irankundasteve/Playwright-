@@ -3,7 +3,7 @@
 A full-stack market intelligence platform that scrapes public data, analyzes it with Gemini AI, and visualizes insights.
 
 ## Features
-- **Daily Scraper**: Uses Playwright to search DuckDuckGo for the latest tech news.
+- **Daily Scraper**: Uses Python and Selenium to search DuckDuckGo for the latest tech news.
 - **Deep Crawling**: Automatically visits top news sites to extract article content.
 - **Automated Storage**: Saves raw data directly to your GitHub repository as `raw_data.json`.
 - **Interactive Dashboard**: Visualizes market trends, audience sentiment, and buying signals.
@@ -27,6 +27,6 @@ The scraper runs automatically via GitHub Actions.
 The app is ready for deployment to Cloud Run or any static hosting provider. The automation runs independently via GitHub Actions.
 
 ## Project Structure
-- `scripts/scraper.ts`: Playwright scraping logic.
+- `scripts/scraper.py`: Python Selenium scraping logic.
 - `src/App.tsx`: Main dashboard UI.
 - `.github/workflows/scrape.yml`: Automation pipeline.
