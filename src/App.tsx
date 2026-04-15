@@ -129,7 +129,8 @@ export default function App() {
               </p>
               <ul className="text-[11px] text-zinc-400 space-y-2 list-disc pl-4">
                 <li>Scraper runs daily at 00:00 UTC</li>
-                <li>Scrapes 24+ tech/business subreddits</li>
+                <li>Searches DuckDuckGo for tech news</li>
+                <li>Crawls top articles for deep insights</li>
                 <li>Data saved to <code className="text-zinc-200">raw_data.json</code></li>
                 <li>Committed directly to your repo</li>
               </ul>

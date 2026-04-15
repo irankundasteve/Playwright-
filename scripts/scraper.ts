@@ -5,7 +5,7 @@ import path from 'path';
 
 chromium.use(stealth());
 
-async function scrapeSubreddit(subreddit: string) {
+async function scrapeNews(query: string) {
   const browser = await chromium.launch({ 
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -15,87 +15,103 @@ async function scrapeSubreddit(subreddit: string) {
   });
   const page = await context.newPage();
 
-  console.log(`Scraping r/${subreddit}...`);
+  console.log(`Searching DuckDuckGo for: ${query}...`);
   
   try {
-    const url = `https://old.reddit.com/r/${subreddit}/new/`;
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    // Search DuckDuckGo (HTML version for easier scraping)
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-    const pageTitle = await page.title();
-    console.log(`Page title for r/${subreddit}: ${pageTitle}`);
-
-    if (pageTitle.includes('Forbidden') || pageTitle.includes('Verify') || pageTitle.includes('Blocked')) {
-      console.warn(`Access restricted for r/${subreddit}. Title: ${pageTitle}`);
-    }
-
-    const postLinks = await page.evaluate(() => {
-      const links = document.querySelectorAll('a.title');
+    const articleLinks = await page.evaluate(() => {
+      const links = document.querySelectorAll('.result__a');
       return Array.from(links)
         .map(a => (a as HTMLAnchorElement).href)
-        .filter(href => href && href.includes('/comments/'))
-        .slice(0, 25);
+        .filter(href => !href.includes('duckduckgo.com'))
+        .slice(0, 15);
     });
 
-    console.log(`Found ${postLinks.length} posts in r/${subreddit}. Scraping details...`);
+    console.log(`Found ${articleLinks.length} news articles. Crawling content...`);
 
     const results = [];
-    for (const link of postLinks) {
+    for (const link of articleLinks) {
       try {
-        const postPage = await context.newPage();
-        await postPage.goto(link, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        console.log(`Crawling: ${link}`);
+        const articlePage = await context.newPage();
+        // Set a shorter timeout for individual articles to keep the process moving
+        await articlePage.goto(link, { waitUntil: 'domcontentloaded', timeout: 20000 });
         
-        const postData = await postPage.evaluate(() => {
-          const title = document.querySelector('a.title')?.textContent?.trim() || '';
-          const body = document.querySelector('div.expando div.md')?.textContent?.trim() || '';
-          const comments = Array.from(document.querySelectorAll('div.comment div.md'))
-            .map(c => c.textContent?.trim())
-            .filter(Boolean)
-            .slice(0, 20); // Limit comments per post to keep file size manageable but large
+        const articleData = await articlePage.evaluate(() => {
+          // Basic heuristic to find main content
+          const title = document.title || '';
           
+          // Remove noise
+          const scripts = document.querySelectorAll('script, style, nav, footer, header, iframe');
+          scripts.forEach(s => s.remove());
+
+          // Get text from common content containers
+          const contentSelectors = ['article', 'main', '.content', '.post-content', '.article-body', '#content'];
+          let bodyText = '';
+          
+          for (const selector of contentSelectors) {
+            const el = document.querySelector(selector);
+            if (el) {
+              bodyText = el.textContent?.trim() || '';
+              if (bodyText.length > 500) break;
+            }
+          }
+
+          // Fallback to body if no specific container found
+          if (bodyText.length < 500) {
+            bodyText = document.body.textContent?.trim() || '';
+          }
+
           return {
             title,
             url: window.location.href,
-            content: body,
-            comments: comments,
-            comment_count: comments.length,
+            content: bodyText.slice(0, 5000), // Limit to 5000 chars per article
             timestamp: new Date().toISOString()
           };
         });
 
-        results.push(postData);
-        await postPage.close();
-        await new Promise(r => setTimeout(r, 500));
+        if (articleData.content.length > 200) {
+          results.push(articleData);
+          console.log(`Successfully crawled: ${articleData.title.slice(0, 50)}...`);
+        }
+        
+        await articlePage.close();
+        await new Promise(r => setTimeout(r, 1000));
       } catch (e) {
-        console.error(`Failed to scrape post ${link}:`, e);
+        console.error(`Failed to crawl ${link}:`, e);
       }
     }
 
     await browser.close();
     return results;
   } catch (error) {
-    console.error(`Scrape failed for r/${subreddit}:`, error);
+    console.error(`Search failed for "${query}":`, error);
     await browser.close();
     return [];
   }
 }
 
 async function main() {
-  const subreddits = [
-    'entrepreneur', 'saas', 'business', 'marketing', 'startups', 
-    'technology', 'artificialintelligence', 'futureology', 'sustainability',
-    'fintech', 'ecommerce', 'contentcreation', 'crypto', 'healthtech',
-    'remotework', 'cybersecurity', 'edtech', 'proptech', 'agritech',
-    'biotech', 'space', 'quantumcomputing', 'renewableenergy', 'robotics'
+  const queries = [
+    'latest tech news 2024',
+    'emerging technology trends business',
+    'artificial intelligence breakthroughs news',
+    'sustainable tech innovations 2024',
+    'future of ecommerce news',
+    'saas industry reports 2024'
   ];
   const allData = [];
 
-  console.log(`Starting massive subreddit scrape for ${subreddits.length} communities...`);
+  console.log(`Starting news crawl for ${queries.length} search queries...`);
 
-  for (const sub of subreddits) {
-    const data = await scrapeSubreddit(sub);
+  for (const query of queries) {
+    const data = await scrapeNews(query);
     if (data.length > 0) {
-      allData.push(...data.map(item => ({ ...item, subreddit: sub })));
-      console.log(`Successfully added ${data.length} items from r/${sub}. Total items: ${allData.length}`);
+      allData.push(...data.map(item => ({ ...item, query })));
+      console.log(`Added ${data.length} articles for query: "${query}". Total: ${allData.length}`);
     }
     await new Promise(resolve => setTimeout(resolve, 2000));
   }

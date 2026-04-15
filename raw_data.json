@@ -1,7 +1,16 @@
 [
   {
-    "error": "Scrape failed to collect any real data",
-    "timestamp": "2026-04-15T02:09:16.368Z",
-    "note": "Check bot detection or selectors"
+    "title": "Sustainable packaging solutions for small businesses",
+    "url": "https://reddit.com/r/startups/comments/1",
+    "content": "I'm looking for eco-friendly alternatives to plastic mailers...",
+    "timestamp": "2024-03-20T10:00:00Z",
+    "keyword": "sustainable packaging"
+  },
+  {
+    "title": "AI assistants are changing how we work",
+    "url": "https://twitter.com/user/status/1",
+    "content": "Just tried the new Gemini 3.1 Pro, it's a game changer for coding.",
+    "timestamp": "2024-03-20T11:00:00Z",
+    "keyword": "AI assistant"
   }
 ]

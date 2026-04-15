@@ -3,7 +3,8 @@
 A full-stack market intelligence platform that scrapes public data, analyzes it with Gemini AI, and visualizes insights.
 
 ## Features
-- **Daily Scraper**: Uses Playwright to collect data from Reddit and other sources.
+- **Daily Scraper**: Uses Playwright to search DuckDuckGo for the latest tech news.
+- **Deep Crawling**: Automatically visits top news sites to extract article content.
 - **Automated Storage**: Saves raw data directly to your GitHub repository as `raw_data.json`.
 - **Interactive Dashboard**: Visualizes market trends, audience sentiment, and buying signals.
 
@@ -15,7 +16,7 @@ The scraper runs automatically via GitHub Actions.
     - Go to **Settings > Actions > General**.
     - Scroll down to **Workflow permissions**.
     - Select **"Read and write permissions"** and click **Save**.
-- The scraper runs daily at 00:00 UTC and commits `raw_data.json` back to the repo.
+- The scraper runs daily at 00:00 UTC, searches for tech news, and commits `raw_data.json` back to the repo.
 
 ### 2. Local Development
 1. Install dependencies: `npm install`
