@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Scraper
         run: python scripts/scraper.py
-        timeout-minutes: 60
+        timeout-minutes: 360
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 

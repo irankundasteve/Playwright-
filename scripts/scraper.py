@@ -94,34 +94,55 @@ def scrape_news(driver, query):
     return all_articles
 
 def main():
+    # Massive multi-domain query list
     queries = [
-        "latest tech news 2024",
-        "emerging technology trends business",
-        "artificial intelligence breakthroughs news",
-        "sustainable tech innovations 2024",
-        "future of ecommerce news",
-        "saas industry reports 2024",
-        "fintech innovation 2024 trends",
-        "cybersecurity threats and solutions 2024",
-        "healthtech startups and breakthroughs",
-        "renewable energy technology news",
-        "space exploration and commercialization news",
-        "quantum computing progress 2024",
-        "robotics and automation in industry",
-        "web3 and blockchain utility cases",
-        "remote work culture and tools trends"
+        # Tech & AI
+        "latest tech news 2024", "artificial intelligence breakthroughs", "quantum computing progress",
+        "cybersecurity threats 2024", "robotics and automation trends", "web3 utility cases",
+        
+        # Finance & Economy
+        "global market trends 2024", "fintech innovation reports", "cryptocurrency regulation news",
+        "central bank digital currencies", "inflation impact on tech startups", "venture capital trends 2024",
+        
+        # Health & Science
+        "biotech breakthroughs 2024", "healthtech innovation news", "genomic medicine progress",
+        "climate change technology solutions", "renewable energy breakthroughs", "space exploration news",
+        
+        # Business & Industry
+        "future of ecommerce 2024", "saas industry growth reports", "supply chain automation news",
+        "creator economy platforms 2024", "remote work culture trends", "proptech innovation news",
+        
+        # Emerging Domains
+        "agritech and vertical farming", "edtech and future of learning", "autonomous vehicle progress",
+        "metaverse enterprise use cases", "green hydrogen technology", "fusion energy milestones"
     ]
     
     total_data = []
-    print(f"Starting optimized news crawl for {len(queries)} search queries...")
+    print(f"Starting EXTREME news crawl for {len(queries)} domains. Target duration: 5+ hours.")
     
     driver = get_driver()
+    start_time = time.time()
+    
     try:
-        for query in queries:
+        for i, query in enumerate(queries):
+            # Check if we've been running for too long (safety check at 5.5 hours)
+            elapsed = (time.time() - start_time) / 3600
+            if elapsed > 5.5:
+                print("Approaching 6-hour GitHub Action limit. Saving progress and exiting.")
+                break
+                
+            print(f"[{i+1}/{len(queries)}] Processing domain: {query}")
             data = scrape_news(driver, query)
             total_data.extend(data)
-            print(f"Current total data items: {len(total_data)}")
-            time.sleep(1)
+            
+            # Save intermediate progress every 5 queries
+            if (i + 1) % 5 == 0:
+                temp_path = os.path.join(os.getcwd(), "raw_data.json")
+                with open(temp_path, "w", encoding="utf-8") as f:
+                    json.dump(total_data, f, indent=2, ensure_ascii=False)
+                print(f"Checkpoint saved. Total items: {len(total_data)}")
+                
+            time.sleep(2)
     finally:
         driver.quit()
         
