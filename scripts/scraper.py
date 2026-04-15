@@ -35,16 +35,16 @@ def scrape_news(query):
         time.sleep(3)
         
         links = driver.find_elements(By.CSS_SELECTOR, ".result__a")
-        article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:10]
+        article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:20]
         
         if not article_links:
             print(f"No links found on DuckDuckGo for '{query}'. Page title: {driver.title}")
             # Fallback to Hacker News for general tech news if search fails
-            if "tech" in query.lower() or "ai" in query.lower():
+            if "tech" in query.lower() or "ai" in query.lower() or "innovation" in query.lower():
                 print("Falling back to Hacker News...")
                 driver.get("https://news.ycombinator.com/")
                 hn_links = driver.find_elements(By.CSS_SELECTOR, ".titleline > a")
-                article_links = [link.get_attribute("href") for link in hn_links][:15]
+                article_links = [link.get_attribute("href") for link in hn_links][:30]
         
         print(f"Found {len(article_links)} links. Starting crawl...")
         
@@ -59,7 +59,7 @@ def scrape_news(query):
                 
                 # Heuristic for main content
                 body_text = ""
-                content_selectors = ["article", "main", ".content", ".post-content", ".article-body", "#content", ".post", ".entry-content"]
+                content_selectors = ["article", "main", ".content", ".post-content", ".article-body", "#content", ".post", ".entry-content", ".body"]
                 
                 for selector in content_selectors:
                     try:
@@ -82,7 +82,7 @@ def scrape_news(query):
                     all_articles.append({
                         "title": title,
                         "url": link,
-                        "content": body_text[:5000],
+                        "content": body_text[:15000], # Increased limit to 15k chars
                         "timestamp": datetime.now().isoformat(),
                         "query": query
                     })
@@ -107,14 +107,32 @@ def main():
         "artificial intelligence breakthroughs news",
         "sustainable tech innovations 2024",
         "future of ecommerce news",
-        "saas industry reports 2024"
+        "saas industry reports 2024",
+        "fintech innovation 2024 trends",
+        "cybersecurity threats and solutions 2024",
+        "healthtech startups and breakthroughs",
+        "renewable energy technology news",
+        "space exploration and commercialization news",
+        "quantum computing progress 2024",
+        "robotics and automation in industry",
+        "web3 and blockchain utility cases",
+        "remote work culture and tools trends",
+        "creator economy growth and platforms",
+        "edtech innovation and future of learning",
+        "proptech trends and real estate tech",
+        "agritech and future of farming news",
+        "biotech and genomic medicine breakthroughs"
     ]
     
     total_data = []
+    print(f"Starting massive news crawl for {len(queries)} search queries to reach >1MB data...")
+    
     for query in queries:
         data = scrape_news(query)
         total_data.extend(data)
-        time.sleep(3)
+        print(f"Current total data items: {len(total_data)}")
+        # Small delay between queries
+        time.sleep(2)
         
     output_path = os.path.join(os.getcwd(), "raw_data.json")
     with open(output_path, "w", encoding="utf-8") as f:
