@@ -25,17 +25,26 @@ def get_driver():
 
 def scrape_news(query):
     driver = get_driver()
-    print(f"Searching DuckDuckGo for: {query}...")
+    print(f"Searching for: {query}...")
     
     all_articles = []
     try:
-        # Using the HTML version of DuckDuckGo for better stability
-        search_url = f"https://html.duckduckgo.com/html/?q={query.replace(' ', '+')}"
+        # Try DuckDuckGo first
+        search_url = f"https://duckduckgo.com/html/?q={query.replace(' ', '+')}"
         driver.get(search_url)
+        time.sleep(3)
         
-        # Wait for results
         links = driver.find_elements(By.CSS_SELECTOR, ".result__a")
         article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:10]
+        
+        if not article_links:
+            print(f"No links found on DuckDuckGo for '{query}'. Page title: {driver.title}")
+            # Fallback to Hacker News for general tech news if search fails
+            if "tech" in query.lower() or "ai" in query.lower():
+                print("Falling back to Hacker News...")
+                driver.get("https://news.ycombinator.com/")
+                hn_links = driver.find_elements(By.CSS_SELECTOR, ".titleline > a")
+                article_links = [link.get_attribute("href") for link in hn_links][:15]
         
         print(f"Found {len(article_links)} links. Starting crawl...")
         
@@ -43,14 +52,14 @@ def scrape_news(query):
             try:
                 print(f"Crawling: {link}")
                 driver.get(link)
-                time.sleep(2) # Be polite
+                time.sleep(3)
                 
                 title = driver.title
+                print(f"Page title: {title}")
                 
                 # Heuristic for main content
-                # Try to find common content containers
                 body_text = ""
-                content_selectors = ["article", "main", ".content", ".post-content", ".article-body", "#content"]
+                content_selectors = ["article", "main", ".content", ".post-content", ".article-body", "#content", ".post", ".entry-content"]
                 
                 for selector in content_selectors:
                     try:
@@ -64,7 +73,10 @@ def scrape_news(query):
                         continue
                 
                 if not body_text:
-                    body_text = driver.find_element(By.TAG_NAME, "body").text.strip()
+                    try:
+                        body_text = driver.find_element(By.TAG_NAME, "body").text.strip()
+                    except:
+                        pass
                 
                 if len(body_text) > 200:
                     all_articles.append({
@@ -75,6 +87,8 @@ def scrape_news(query):
                         "query": query
                     })
                     print(f"Successfully crawled: {title[:50]}...")
+                else:
+                    print(f"Content too short ({len(body_text)} chars) for {link}")
                 
             except Exception as e:
                 print(f"Failed to crawl {link}: {e}")
