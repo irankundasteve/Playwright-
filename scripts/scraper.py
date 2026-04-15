@@ -34,16 +34,16 @@ def scrape_news(driver, query):
         time.sleep(1)
         
         links = driver.find_elements(By.CSS_SELECTOR, ".result__a")
-        article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:15]
+        article_links = [link.get_attribute("href") for link in links if "duckduckgo.com" not in link.get_attribute("href")][:30]
         
         if not article_links:
             print(f"No links found on DuckDuckGo for '{query}'. Page title: {driver.title}")
             # Fallback to Hacker News for general tech news if search fails
-            if "tech" in query.lower() or "ai" in query.lower() or "innovation" in query.lower():
+            if any(k in query.lower() for k in ["tech", "ai", "innovation", "science", "future"]):
                 print("Falling back to Hacker News...")
                 driver.get("https://news.ycombinator.com/")
                 hn_links = driver.find_elements(By.CSS_SELECTOR, ".titleline > a")
-                article_links = [link.get_attribute("href") for link in hn_links][:20]
+                article_links = [link.get_attribute("href") for link in hn_links][:40]
         
         print(f"Found {len(article_links)} links. Starting crawl...")
         
@@ -94,28 +94,99 @@ def scrape_news(driver, query):
     return all_articles
 
 def main():
-    # Massive multi-domain query list
-    queries = [
-        # Tech & AI
+    # Massive multi-domain query list expanded to hundreds of topics
+    base_queries = [
         "latest tech news 2024", "artificial intelligence breakthroughs", "quantum computing progress",
         "cybersecurity threats 2024", "robotics and automation trends", "web3 utility cases",
-        
-        # Finance & Economy
         "global market trends 2024", "fintech innovation reports", "cryptocurrency regulation news",
         "central bank digital currencies", "inflation impact on tech startups", "venture capital trends 2024",
-        
-        # Health & Science
         "biotech breakthroughs 2024", "healthtech innovation news", "genomic medicine progress",
         "climate change technology solutions", "renewable energy breakthroughs", "space exploration news",
-        
-        # Business & Industry
         "future of ecommerce 2024", "saas industry growth reports", "supply chain automation news",
         "creator economy platforms 2024", "remote work culture trends", "proptech innovation news",
-        
-        # Emerging Domains
         "agritech and vertical farming", "edtech and future of learning", "autonomous vehicle progress",
-        "metaverse enterprise use cases", "green hydrogen technology", "fusion energy milestones"
+        "metaverse enterprise use cases", "green hydrogen technology", "fusion energy milestones",
+        "semiconductor industry news", "edge computing applications", "5G and 6G development",
+        "digital twin technology", "neuromorphic computing", "nanotechnology in medicine",
+        "circular economy business models", "carbon capture and storage", "blue economy trends",
+        "precision medicine startups", "personalized nutrition tech", "mental health apps market",
+        "insurtech innovation", "regtech compliance tools", "wealthtech for retail investors",
+        "direct-to-consumer brand strategies", "social commerce growth", "omnichannel retail tech",
+        "low-code no-code platform trends", "cloud native architecture", "devops automation tools",
+        "gig economy worker rights", "future of urban mobility", "smart city infrastructure",
+        "vertical takeoff and landing aircraft", "hyperloop development status", "solid state batteries",
+        "hydrogen fuel cell vehicles", "microgrid technology", "tidal and wave energy",
+        "synthetic biology applications", "lab grown meat industry", "regenerative agriculture",
+        "commercial space stations", "asteroid mining feasibility", "satellite internet constellations",
+        "ethical AI frameworks", "data privacy regulations 2024", "algorithmic bias solutions",
+        "virtual reality in education", "augmented reality for retail", "mixed reality workplace",
+        "gamification in business", "esports industry growth", "digital fashion and NFTs",
+        "quantum cryptography", "zero trust security model", "biometric authentication trends",
+        "predictive maintenance in manufacturing", "industrial internet of things", "cobots in logistics",
+        "telemedicine adoption rates", "wearable health monitors", "AI in drug discovery",
+        "impact investing trends", "ESG reporting standards", "sustainable supply chain",
+        "micro-fulfillment centers", "last mile delivery drones", "dark stores and ghost kitchens",
+        "subscription box market", "recommerce and second-hand market", "luxury brand digital strategy",
+        "work-from-anywhere policies", "four-day work week trials", "employee well-being tech",
+        "online tutoring platforms", "micro-learning and skill-based hiring", "LMS market trends",
+        "real estate tokenization", "smart home automation", "co-living and co-working spaces",
+        "hydroponics and aquaponics", "soil health monitoring tech", "livestock tracking IoT",
+        "CRISPR and gene editing", "longevity and anti-aging research", "microbiome therapeutics",
+        "deep sea exploration tech", "ocean plastic cleanup solutions", "water desalination tech",
+        "modular construction", "3D printed houses", "smart building materials",
+        "autonomous shipping", "electric planes development", "maglev train projects",
+        "decentralized finance (DeFi) protocols", "stablecoin market share", "NFT utility in gaming",
+        "governance tokens and DAOs", "layer 2 scaling solutions", "cross-chain interoperability",
+        "generative AI for marketing", "AI video generation tools", "natural language processing news",
+        "computer vision in retail", "reinforcement learning use cases", "AI hardware and chips",
+        "open source software sustainability", "API economy and integration", "serverless computing",
+        "containerization and kubernetes", "observability and monitoring", "site reliability engineering",
+        "influencer marketing ROI", "short-form video trends", "podcast industry monetization",
+        "community-led growth", "product-led growth strategies", "customer success tech",
+        "B2B marketplace growth", "procurement software trends", "ERP modernization",
+        "HR tech and talent acquisition", "payroll and benefits automation", "diversity and inclusion tech",
+        "legaltech and contract automation", "e-discovery and litigation support", "intellectual property tech",
+        "non-profit and social impact tech", "civic tech and open government", "voting technology news",
+        "disaster response and relief tech", "public safety and surveillance tech", "smart grid security",
+        "nuclear small modular reactors", "geothermal energy expansion", "bioenergy with carbon capture",
+        "plastic recycling technology", "waste-to-energy plants", "textile recycling innovation",
+        "sustainable aviation fuel", "green shipping corridors", "rail freight modernization",
+        "indoor air quality tech", "smart lighting and HVAC", "energy management systems",
+        "vertical farming profitability", "insect protein industry", "alternative dairy market",
+        "personalized medicine for cancer", "liquid biopsy technology", "mRNA vaccine platform",
+        "brain-computer interfaces", "exoskeletons for rehabilitation", "3D bioprinting of organs",
+        "digital therapeutics", "remote patient monitoring", "AI in medical imaging",
+        "impact of AI on job market", "universal basic income pilots", "future of unions",
+        "skills gap and reskilling", "vocational training tech", "lifelong learning platforms",
+        "digital nomad visas", "van life and mobile living", "sustainable tourism tech",
+        "space tourism market", "lunar base construction", "mars colonization plans",
+        "quantum sensors", "quantum metrology", "quantum networking",
+        "post-quantum cryptography", "optical computing", "DNA data storage",
+        "soft robotics", "swarm robotics", "humanoid robots in service",
+        "AI for weather forecasting", "precision forestry", "wildfire detection tech",
+        "illegal fishing tracking", "wildlife conservation drones", "biodiversity monitoring",
+        "circular fashion", "slow fashion movement", "upcycling business models",
+        "sharing economy for tools", "peer-to-peer energy trading", "community solar projects",
+        "micro-mobility in cities", "bike-sharing and scooter-sharing", "pedestrian-centric urban design",
+        "smart traffic management", "parking automation tech", "public transit optimization",
+        "digital identity and wallets", "self-sovereign identity", "verifiable credentials",
+        "biometric payments", "contactless payment trends", "buy now pay later (BNPL) news",
+        "open banking adoption", "embedded finance for non-banks", "neobank profitability",
+        "AI in wealth management", "robo-advisors for ESG", "fractional ownership of assets",
+        "real-time payments", "cross-border payment innovation", "remittance tech",
+        "centralized vs decentralized exchanges", "crypto custody for institutions", "bitcoin mining energy use",
+        "ethereum staking and yield", "solana ecosystem growth", "polkadot and parachains",
+        "metaverse for training", "virtual events and conferences", "digital twins of cities",
+        "holographic displays", "spatial audio technology", "haptic feedback devices",
+        "AI for accessibility", "assistive technology for elderly", "neurodiversity in tech",
+        "ethical sourcing and fair trade", "transparency in supply chains", "conflict minerals tracking",
+        "corporate social responsibility (CSR) tech", "philanthropy automation", "volunteer management platforms"
     ]
+    
+    # Shuffle or repeat to ensure we have enough work for 5 hours
+    import random
+    queries = base_queries * 2 # Double the list just in case
+    random.shuffle(queries)
     
     total_data = []
     print(f"Starting EXTREME news crawl for {len(queries)} domains. Target duration: 5+ hours.")
@@ -131,7 +202,7 @@ def main():
                 print("Approaching 6-hour GitHub Action limit. Saving progress and exiting.")
                 break
                 
-            print(f"[{i+1}/{len(queries)}] Processing domain: {query}")
+            print(f"[{i+1}/{len(queries)}] Processing domain: {query} (Elapsed: {elapsed:.2f}h)")
             data = scrape_news(driver, query)
             total_data.extend(data)
             
@@ -142,7 +213,8 @@ def main():
                     json.dump(total_data, f, indent=2, ensure_ascii=False)
                 print(f"Checkpoint saved. Total items: {len(total_data)}")
                 
-            time.sleep(2)
+            # Random delay to look more human and fill time
+            time.sleep(random.uniform(5, 15))
     finally:
         driver.quit()
         
