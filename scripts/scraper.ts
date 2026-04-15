@@ -5,7 +5,7 @@ import path from 'path';
 
 chromium.use(stealth());
 
-async function scrapeReddit(keyword: string) {
+async function scrapeSubreddit(subreddit: string) {
   const browser = await chromium.launch({ 
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -15,29 +15,28 @@ async function scrapeReddit(keyword: string) {
   });
   const page = await context.newPage();
 
-  console.log(`Scraping Reddit for: ${keyword}...`);
+  console.log(`Scraping r/${subreddit}...`);
   
   try {
-    // Using old.reddit.com for better stability and easier parsing
-    const searchUrl = `https://old.reddit.com/search/?q=${encodeURIComponent(keyword)}&t=week&sort=relevance`;
-    console.log(`Navigating to: ${searchUrl}`);
-    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    const url = `https://old.reddit.com/r/${subreddit}/new/`;
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-    const currentUrl = page.url();
-    if (currentUrl.includes('login')) {
-      console.warn('Redirected to login page. Attempting to bypass...');
+    const pageTitle = await page.title();
+    console.log(`Page title for r/${subreddit}: ${pageTitle}`);
+
+    if (pageTitle.includes('Forbidden') || pageTitle.includes('Verify') || pageTitle.includes('Blocked')) {
+      console.warn(`Access restricted for r/${subreddit}. Title: ${pageTitle}`);
     }
-
-    // Scroll to ensure content loads (though old reddit doesn't need much)
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(2000);
 
     const postLinks = await page.evaluate(() => {
       const links = document.querySelectorAll('a.title');
-      return Array.from(links).map(a => (a as HTMLAnchorElement).href).slice(0, 10);
+      return Array.from(links)
+        .map(a => (a as HTMLAnchorElement).href)
+        .filter(href => href && href.includes('/comments/'))
+        .slice(0, 25);
     });
 
-    console.log(`Found ${postLinks.length} post links for "${keyword}". Scraping details and comments...`);
+    console.log(`Found ${postLinks.length} posts in r/${subreddit}. Scraping details...`);
 
     const results = [];
     for (const link of postLinks) {
@@ -50,7 +49,8 @@ async function scrapeReddit(keyword: string) {
           const body = document.querySelector('div.expando div.md')?.textContent?.trim() || '';
           const comments = Array.from(document.querySelectorAll('div.comment div.md'))
             .map(c => c.textContent?.trim())
-            .filter(Boolean);
+            .filter(Boolean)
+            .slice(0, 20); // Limit comments per post to keep file size manageable but large
           
           return {
             title,
@@ -64,8 +64,7 @@ async function scrapeReddit(keyword: string) {
 
         results.push(postData);
         await postPage.close();
-        // Small delay to be polite
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 500));
       } catch (e) {
         console.error(`Failed to scrape post ${link}:`, e);
       }
@@ -74,37 +73,31 @@ async function scrapeReddit(keyword: string) {
     await browser.close();
     return results;
   } catch (error) {
-    console.error(`Scrape failed for ${keyword}:`, error);
-    const bodySnippet = await page.evaluate(() => document.body.innerText.slice(0, 500));
-    console.log(`Page body snippet: ${bodySnippet}`);
+    console.error(`Scrape failed for r/${subreddit}:`, error);
     await browser.close();
     return [];
   }
 }
 
 async function main() {
-  const keywords = [
-    'sustainable packaging', 'AI assistant', 'saas ideas', 'market trends 2024',
-    'consumer behavior', 'future of work', 'climate tech', 'fintech innovation',
-    'ecommerce growth', 'creator economy', 'web3 utility', 'healthtech',
-    'remote work tools', 'cybersecurity trends', 'edtech startups', 'proptech',
-    'agritech', 'biotech breakthroughs', 'space economy', 'quantum computing',
-    'renewable energy', 'electric vehicles', 'autonomous driving', 'robotics'
+  const subreddits = [
+    'entrepreneur', 'saas', 'business', 'marketing', 'startups', 
+    'technology', 'artificialintelligence', 'futureology', 'sustainability',
+    'fintech', 'ecommerce', 'contentcreation', 'crypto', 'healthtech',
+    'remotework', 'cybersecurity', 'edtech', 'proptech', 'agritech',
+    'biotech', 'space', 'quantumcomputing', 'renewableenergy', 'robotics'
   ];
   const allData = [];
 
-  console.log(`Starting massive scrape for ${keywords.length} keywords...`);
+  console.log(`Starting massive subreddit scrape for ${subreddits.length} communities...`);
 
-  for (const keyword of keywords) {
-    const data = await scrapeReddit(keyword);
+  for (const sub of subreddits) {
+    const data = await scrapeSubreddit(sub);
     if (data.length > 0) {
-      allData.push(...data.map(item => ({ ...item, keyword })));
-      console.log(`Successfully added ${data.length} items for "${keyword}". Total items: ${allData.length}`);
-    } else {
-      console.warn(`No data collected for keyword: "${keyword}"`);
+      allData.push(...data.map(item => ({ ...item, subreddit: sub })));
+      console.log(`Successfully added ${data.length} items from r/${sub}. Total items: ${allData.length}`);
     }
-    // Small delay between keywords to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   const outputPath = path.join(process.cwd(), 'raw_data.json');
